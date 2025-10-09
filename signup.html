@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal - e-Library</title>
+<style>
+  body {
+    margin:0;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: url('https://images.unsplash.com/photo-1512820790803-83ca734da794') no-repeat center center/cover;
+    color: white;
+    position: relative;
+  }
+  body::before {
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.5);
+    z-index:0;
+  }
+  .container {
+    position: relative;
+    z-index:1;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(6px);
+    padding: 40px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    text-align: center;
+  }
+  h1 {
+    margin-bottom:20px;
+    text-shadow:2px 2px 6px rgba(0,0,0,0.7);
+  }
+  .tabs {
+    display:flex;
+    justify-content: center;
+    margin-bottom:20px;
+    gap:10px;
+  }
+  .tab {
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.3);
+    border-radius:5px;
+    cursor:pointer;
+  }
+  .tab.active {
+    background:#fff;
+    color:#000;
+    font-weight:bold;
+  }
+  form {
+    display:flex;
+    flex-direction: column;
+    gap:10px;
+  }
+  input {
+    padding:10px;
+    border-radius:5px;
+    border:none;
+    outline:none;
+  }
+  button {
+    padding:10px;
+    border:none;
+    border-radius:5px;
+    background:#fff;
+    color:#000;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+  }
+  button:hover{
+    transform:scale(1.05);
+    background:#eee;
+  }
+  .links{
+    margin-top:10px;
+    font-size:0.9em;
+  }
+  .links a{
+    color:#fff;
+    text-decoration:underline;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Student Portal</h1>
+  <div class="tabs">
+    <div class="tab active" id="signInTab" onclick="switchTab('signIn')">Sign In</div>
+    <div class="tab" id="signUpTab" onclick="switchTab('signUp')">Sign Up</div>
+  </div>
+
+  <!-- Sign In Form -->
+  <form id="signInForm">
+    <label for="emailSignIn">Email:</label>
+    <input type="email" id="emailSignIn" required>
+    <label for="passwordSignIn">Password:</label>
+    <input type="password" id="passwordSignIn" required>
+    <button type="submit">Sign In</button>
+    <div class="links">
+      <a href="forgot-password.html">Forgot Password?</a>
+    </div>
+  </form>
+
+  <!-- Sign Up Form -->
+  <form id="signUpForm" style="display:none;">
+    <label for="nameSignUp">Full Name:</label>
+    <input type="text" id="nameSignUp" required>
+    <label for="emailSignUp">Email:</label>
+    <input type="email" id="emailSignUp" required>
+    <label for="passwordSignUp">Password:</label>
+    <input type="password" id="passwordSignUp" required>
+    <button type="submit">Sign Up</button>
+  </form>
+</div>
+
+<script>
+function switchTab(tab){
+  if(tab==='signIn'){
+    document.getElementById('signInForm').style.display='flex';
+    document.getElementById('signUpForm').style.display='none';
+    document.getElementById('signInTab').classList.add('active');
+    document.getElementById('signUpTab').classList.remove('active');
+  } else {
+    document.getElementById('signInForm').style.display='none';
+    document.getElementById('signUpForm').style.display='flex';
+    document.getElementById('signInTab').classList.remove('active');
+    document.getElementById('signUpTab').classList.add('active');
+  }
+}
+
+// Mock validation
+document.getElementById('signInForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  alert('Student signed in (mock)');
+  window.location.href='student-dashboard.html';
+});
+document.getElementById('signUpForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  alert('Student signed up (mock)');
+  window.location.href='student-dashboard.html';
+});
+</script>
+</body>
+</html>

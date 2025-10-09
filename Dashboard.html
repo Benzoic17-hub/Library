@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url("https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=1920&q=80") no-repeat center center/cover;
+      height: 100vh;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 20px;
+      height: 100vh;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: white;
+      text-decoration: none;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .sidebar a:hover {
+      background: #00bcd4;
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+      background: rgba(255,255,255,0.8);
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Admin Panel</h2>
+    <a href="?page=books">📚 Manage Books</a>
+    <a href="?page=students">👨‍🎓 Manage Students</a>
+    <a href="?page=borrow">📖 Borrow Records</a>
+    <a href="?page=return">↩ Return Records</a>
+    <a href="logout.php">🚪 Logout</a>
+  </div>
+
+  <div class="content">
+   
+  </div>
+</body>
+</html>

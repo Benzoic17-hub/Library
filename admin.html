@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>e-Library Management System</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: url('https://images.unsplash.com/photo-1512820790803-83ca734da794') no-repeat center center/cover;
+      position: relative;
+      color: white;
+    }
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 0;
+    }
+    .overlay {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      padding: 40px;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 400px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+    h1 {
+      font-size: 2em;
+      margin: 0 0 20px 0;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+    }
+    .roles {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .role {
+      cursor: pointer;
+      padding: 15px 25px;
+      background: rgba(255,255,255,0.85);
+      color: #000;
+      border-radius: 8px;
+      font-size: 1.1em;
+      font-weight: bold;
+      transition: transform 0.3s, background 0.3s;
+    }
+    .role:hover {
+      background: rgba(255,255,255,1);
+      transform: scale(1.05);
+    }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+    .tab {
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: #fff;
+      color: #000;
+      font-weight: bold;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+      text-align: left;
+    }
+    input[type="email"], input[type="password"], input[type="text"] {
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      outline: none;
+    }
+    button {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #fff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.3s, background 0.3s;
+    }
+    button:hover {
+      transform: scale(1.05);
+      background-color: #eee;
+    }
+    .links {
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
+    .links a {
+      color: #fff;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <h1>e-Library Management System</h1>
+
+    <div class="roles">
+      <div class="role" onclick="showLoginForm('admin')">Admin <span>👤</span></div>
+      <div class="role" onclick="showLoginForm('student')">Student <span>🎓</span></div>
+    </div>
+
+    <div id="loginFormContainer" style="display:none;">
+      <!-- ADMIN LOGIN -->
+      <div id="adminForm">
+        <form action="admin_login.php" method="POST">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+          <button type="submit" id="adminSubmit">Sign In</button>
+        </form>
+        <div class="links">
+          <a href="#">Forgot Password?</a> | 
+          <a href="#" id="switchLogin">Switch to Student Login</a>
+        </div>
+      </div>
+
+      <!-- STUDENT LOGIN + SIGNUP -->
+      <div id="studentForm" style="display:none;">
+        <div class="tabs">
+          <div class="tab active" id="signInTab" onclick="switchTab('signIn')">Sign In</div>
+          <div class="tab" id="signUpTab" onclick="switchTab('signUp')">Sign Up</div>
+        </div>
+
+        <!-- Student Login -->
+        <form id="signInForm" method="POST">
+          <label for="emailSignIn">Email:</label>
+          <input type="email" id="emailSignIn" name="email" required>
+          <label for="passwordSignIn">Password:</label>
+          <input type="password" id="passwordSignIn" name="password" required>
+          <button type="submit">Sign In</button>
+          <div class="links">
+            <a href="#">Forgot Password?</a> | 
+            <a href="#" id="switchToAdmin">Switch to Admin Login</a>
+          </div>
+        </form>
+
+        <!-- Student SignUp -->
+        <form id="signUpForm" method="POST" style="display:none;">
+          <label for="nameSignUp">Full Name:</label>
+          <input type="text" id="nameSignUp" name="name" required>
+          <label for="emailSignUp">Email:</label>
+          <input type="email" id="emailSignUp" name="email" required>
+          <label for="passwordSignUp">Password:</label>
+          <input type="password" id="passwordSignUp" name="password" required>
+          <label for="passwordSignUp">Password:</label>
+          <input type="password" id="passwordSignUp" name="password" required>
+          <button type="submit">Sign Up</button>
+          <div class="links">
+            <a href="#" id="switchToAdminFromSignUp">Switch to Admin Login</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showLoginForm(role) {
+      document.getElementById('loginFormContainer').style.display = 'block';
+      if (role === 'admin') {
+        document.getElementById('adminForm').style.display = 'block';
+        document.getElementById('studentForm').style.display = 'none';
+      } else {
+        document.getElementById('adminForm').style.display = 'none';
+        document.getElementById('studentForm').style.display = 'block';
+        document.getElementById('signInForm').style.display = 'flex';
+        document.getElementById('signUpForm').style.display = 'none';
+        document.getElementById('signInTab').classList.add('active');
+        document.getElementById('signUpTab').classList.remove('active');
+      }
+    }
+
+    function switchTab(tab) {
+      if (tab === 'signIn') {
+        document.getElementById('signInForm').style.display = 'flex';
+        document.getElementById('signUpForm').style.display = 'none';
+        document.getElementById('signInTab').classList.add('active');
+        document.getElementById('signUpTab').classList.remove('active');
+      } else {
+        document.getElementById('signInForm').style.display = 'none';
+        document.getElementById('signUpForm').style.display = 'flex';
+        document.getElementById('signInTab').classList.remove('active');
+        document.getElementById('signUpTab').classList.add('active');
+      }
+    }
+
+    document.getElementById('switchLogin')?.addEventListener('click', function() {
+      showLoginForm('student');
+    });
+
+    document.getElementById('switchToAdmin')?.addEventListener('click', function() {
+      showLoginForm('admin');
+    });
+
+    document.getElementById('switchToAdminFromSignUp')?.addEventListener('click', function() {
+      showLoginForm('admin');
+    });
+
+    document.getElementById("adminSubmit").addEventListener('click', showDashboard);
+
+    function showDashboard() {
+      window.location.href = './admin_dashboard.php'
+    }
+  </script>
+</body>
+</html>

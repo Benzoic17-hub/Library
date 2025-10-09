@@ -1,0 +1,32 @@
+<?php
+session_start();
+
+// Check if admin is logged in
+if (!isset($_SESSION['admin_logged_in'])) {
+    header("Location: admin_login.php");
+    exit();
+}
+
+// Database connection
+$conn = new mysqli("localhost", "root", "", "library");
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Handle search
+$searchResults = [];
+if (isset($_POST['search'])) {
+    $keyword = $conn->real_escape_string($_POST['keyword']);
+    $sql = "SELECT * FROM books 
+        WHERE status='Available' 
+        AND (title LIKE '%$keyword%' OR author LIKE '%$keyword%' OR category LIKE '%$keyword%')";
+
+    $result = $conn->query($sql);
+    if ($result->num_rows > 0) {
+        $searchResults = $result->fetch_all(MYSQLI_ASSOC);
+    }
+}
+?>
+
+
+cptc oqkx ozwp uiyt
