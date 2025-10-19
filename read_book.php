@@ -62,7 +62,7 @@ if (!file_exists($pdf_path)) {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
             background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
+            animation: gradientShift 1m ease infinite;
             overflow: hidden;
             height: 100vh;
         }

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library Media Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white h-screen shadow-lg">
+    <div class="p-4 text-2xl font-bold border-b">Library</div>
+    <nav class="mt-4 space-y-2">
+      <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-200 rounded">Content</a>
+      <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-200 rounded">Structure</a>
+      <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-200 rounded">Appearance</a>
+      <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-200 rounded">Configuration</a>
+      <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-200 rounded">Reports</a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-xl font-bold">Media</h1>
+      <button class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700">
+        + Add Media
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white p-4 rounded-lg shadow mb-6">
+      <div class="grid grid-cols-4 gap-4">
+        <input type="text" placeholder="Search name..." class="border rounded px-2 py-1">
+        <select class="border rounded px-2 py-1">
+          <option>All Media Types</option>
+          <option>Images</option>
+          <option>PDF</option>
+        </select>
+        <select class="border rounded px-2 py-1">
+          <option>All Languages</option>
+        </select>
+        <select class="border rounded px-2 py-1">
+          <option>Newest First</option>
+          <option>Oldest First</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Media Grid -->
+    <div class="grid grid-cols-4 gap-4">
+      <!-- Card -->
+      <div class="relative bg-white rounded-lg shadow overflow-hidden">
+        <img src="https://picsum.photos/200" class="w-full h-32 object-cover">
+        <div class="absolute top-2 left-2 bg-white p-1 rounded">
+          <input type="checkbox">
+        </div>0
+        <div class="absolute top-2 right-2 flex space-x-1">
+          <button class="bg-white p-1 rounded shadow">✏️</button>
+          <button class="bg-white p-1 rounded shadow">❌</button>
+        </div>
+        <div class="p-2 text-sm text-gray-600">sample-image.jpg</div>
+      </div>
+
+      <!-- Repeat cards -->
+      <div class="relative bg-white rounded-lg shadow overflow-hidden">
+        <img src="https://picsum.photos/201" class="w-full h-32 object-cover">
+        <div class="absolute top-2 left-2 bg-white p-1 rounded">
+          <input type="checkbox">
+        </div>
+        <div class="absolute top-2 right-2 flex space-x-1">
+          <button class="bg-white p-1 rounded shadow">✏️</button>
+          <button class="bg-white p-1 rounded shadow">❌</button>
+        </div>
+        <div class="p-2 text-sm text-gray-600">book-cover.jpg</div>
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>

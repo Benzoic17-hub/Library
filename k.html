@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Item Library Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-purple-100 font-sans">
+
+  <!-- Wrapper -->
+  <div class="flex h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-lg flex flex-col">
+      <div class="text-3xl font-bold text-purple-600 p-6">Sugar</div>
+      <nav class="flex-1 px-4 space-y-2">
+        <a href="#" class="flex items-center space-x-2 p-2 rounded hover:bg-purple-100">
+          <span>🏠</span><span>Dashboard</span>
+        </a>
+        <a href="#" class="flex items-center space-x-2 p-2 rounded hover:bg-purple-100">
+          <span>👤</span><span>Profile</span>
+        </a>
+        <a href="#" class="flex items-center space-x-2 p-2 rounded bg-purple-200 text-purple-800 font-semibold">
+          <span>📚</span><span>Item Library</span>
+        </a>
+        <a href="#" class="flex items-center space-x-2 p-2 rounded hover:bg-purple-100">
+          <span>💰</span><span>Finance</span>
+        </a>
+        <a href="#" class="flex items-center space-x-2 p-2 rounded hover:bg-purple-100">
+          <span>📦</span><span>Supply</span>
+        </a>
+      </nav>
+      <div class="p-4 border-t">
+        <a href="#" class="block py-2">⚙️ Setting</a>
+        <a href="#" class="block py-2 text-red-500">🚪 Log Out</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-xl font-bold">Item Library</h1>
+        <div class="flex space-x-2">
+          <button class="bg-purple-200 text-purple-700 px-4 py-2 rounded">Import</button>
+          <button class="bg-purple-600 text-white px-4 py-2 rounded">+ New Item</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-6 h-[80vh]">
+        <!-- Item List -->
+        <div class="col-span-1 bg-white rounded-lg shadow p-4 overflow-y-auto">
+          <div class="mb-2 font-semibold">Category: All</div>
+          <div class="space-y-3">
+            <div class="border rounded p-3 hover:bg-purple-50 cursor-pointer">
+              <div class="font-bold">Choco Berry Cake</div>
+              <div class="text-sm text-gray-500">Rp 210.000</div>
+            </div>
+            <div class="border rounded p-3 hover:bg-purple-50 cursor-pointer">
+              <div class="font-bold">Tiramisu with Lady Finger</div>
+              <div class="text-sm text-gray-500">Rp 235.000</div>
+            </div>
+            <div class="border rounded p-3 hover:bg-purple-50 cursor-pointer">
+              <div class="font-bold">Strawberry Red Velvet</div>
+              <div class="text-sm text-gray-500">Rp 195.000</div>
+            </div>
+            <div class="border rounded p-3 hover:bg-purple-50 cursor-pointer">
+              <div class="font-bold">American Chocolate Cookies</div>
+              <div class="text-sm text-gray-500">Rp 90.000</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item Details -->
+        <div class="col-span-2 bg-white rounded-lg shadow p-6">
+          <h2 class="text-lg font-semibold mb-4">Item Details</h2>
+          <div class="flex space-x-4">
+            <img src="https://picsum.photos/100" alt="cake" class="w-24 h-24 rounded object-cover border">
+            <div class="flex-1">
+              <label class="block text-sm font-medium">Item Name</label>
+              <input type="text" value="Choco Berry Cake" class="w-full border rounded px-2 py-1 mb-3">
+
+              <label class="block text-sm font-medium">Description</label>
+              <textarea class="w-full border rounded px-2 py-1 mb-3">Rich chocolate cake filled with buttercream...</textarea>
+
+              <label class="block text-sm font-medium">Price</label>
+              <input type="text" value="Rp 210.000" class="w-full border rounded px-2 py-1 mb-3">
+
+              <label class="block text-sm font-medium">Category</label>
+              <input type="text" value="Special Cake" class="w-full border rounded px-2 py-1 mb-3">
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <h3 class="font-medium">Variants</h3>
+            <div class="border rounded p-3 mt-2">
+              <label class="block text-sm">Variant Name</label>
+              <input type="text" value="Cake Size" class="border rounded px-2 py-1 w-full mb-2">
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="text-sm">Option</label>
+                  <input type="text" value="Normal (9”)" class="border rounded px-2 py-1 w-full">
+                </div>
+                <div>
+                  <label class="text-sm">Additional Price</label>
+                  <input type="text" value="Rp 0" class="border rounded px-2 py-1 w-full">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4 mt-2">
+                <div>
+                  <input type="text" value="Large (12”)" class="border rounded px-2 py-1 w-full">
+                </div>
+                <div>
+                  <input type="text" value="Rp 80.000" class="border rounded px-2 py-1 w-full">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-2 mt-6">
+            <button class="bg-gray-200 px-4 py-2 rounded">Cancel</button>
+            <button class="bg-purple-600 text-white px-4 py-2 rounded">Save Item</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

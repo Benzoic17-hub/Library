@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../an"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "Library_system"
+	}
+}

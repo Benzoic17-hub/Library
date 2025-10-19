@@ -1,9 +1,93 @@
 <?php
 session_start();
-$isLoggedIn = isset($_SESSION['username']);
-$welcomeMessage = $isLoggedIn ? "Welcome back, " . htmlspecialchars($_SESSION['username']) . "!" : "e-Library Management System";
-$role = $isLoggedIn ? $_SESSION['role'] : null;
+
+// If already logged in, redirect to appropriate dashboard
+if (isset($_SESSION['role'])) {
+    if ($_SESSION['role'] === 'admin') {
+        header("Location: admin_dashboard.php");
+    } else {
+        header("Location: student_dashboard.php");
+    }
+    exit();
+}
+
+// Connect to database
+$conn = new mysqli("localhost", "root", "", "library");
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+$error = "";
+
+// Handle login form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $loginInput = trim($_POST['username']); 
+    $password = $_POST['password'];
+
+    if (empty($loginInput) || empty($password)) {
+        $error = "Please fill in all fields.";
+    } else {
+        // First, check if it's an admin
+        $stmt = $conn->prepare("SELECT id, name, email, password FROM admins WHERE email = ? OR name = ?");
+        $stmt->bind_param("ss", $loginInput, $loginInput);
+        $stmt->execute();
+        $stmt->store_result();
+
+        if ($stmt->num_rows === 1) {
+            // Admin found
+            $stmt->bind_result($admin_id, $admin_name, $admin_email, $hashed_password);
+            $stmt->fetch();
+
+            if (password_verify($password, $hashed_password)) {
+                session_regenerate_id(true);
+                $_SESSION['admin_logged_in'] = true;
+                $_SESSION['admin_id'] = $admin_id;
+                $_SESSION['username'] = $admin_name;
+                $_SESSION['email'] = $admin_email;
+                $_SESSION['role'] = "admin";
+
+                header("Location: admin_dashboard.php");
+                exit();
+            } else {
+                $error = "Incorrect password.";
+            }
+        } else {
+            // Not an admin, check if it's a student
+            $stmt->close();
+            $stmt = $conn->prepare("SELECT student_id, username, password, email, fullname FROM students WHERE username = ? OR email = ?");
+            $stmt->bind_param("ss", $loginInput, $loginInput);
+            $stmt->execute();
+            $stmt->store_result();
+
+            if ($stmt->num_rows === 1) {
+                // Student found
+                $stmt->bind_result($student_id, $username, $hashed_password, $email, $fullname);
+                $stmt->fetch();
+
+                if (password_verify($password, $hashed_password)) {
+                    session_regenerate_id(true);
+                    $_SESSION['role'] = "student";
+                    $_SESSION['student_id'] = $student_id;
+                    $_SESSION['username'] = $username;
+                    $_SESSION['email'] = $email;
+                    $_SESSION['fullname'] = $fullname;
+
+                    header("Location: student_dashboard.php");
+                    exit();
+                } else {
+                    $error = "Incorrect password.";
+                }
+            } else {
+                $error = "No account found with that username or email.";
+            }
+        }
+
+        $stmt->close();
+    }
+}
+$conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,141 +140,62 @@ $role = $isLoggedIn ? $_SESSION['role'] : null;
       margin: 10px 0;
       border-radius: 6px;
       border: 1px solid #ccc;
+      box-sizing: border-box;
     }
     button {
       background: #007BFF;
       color: white;
       font-weight: bold;
       cursor: pointer;
+      border: none;
     }
     button:hover {
       background: #0056b3;
     }
-    .role {
-      cursor: pointer;
-      padding: 12px 20px;
-      background: rgba(255,255,255,0.85);
-      color: #000;
-      border-radius: 8px;
-      font-size: 1.1em;
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-left: 5px solid #dc3545;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .register-link {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .register-link a {
+      color: #007BFF;
+      text-decoration: none;
       font-weight: bold;
-      transition: transform 0.3s, background 0.3s;
-      margin: 10px;
-      display: inline-block;
     }
-    .role:hover {
-      background: rgba(255,255,255,1);
-      transform: scale(1.05);
+    .register-link a:hover {
+      text-decoration: underline;
     }
-    .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="overlay">
-    <h1><?php echo $welcomeMessage; ?></h1>
-
-    <?php if (!$isLoggedIn): ?>
-      <!-- Role selector -->
-      <div>
-        <div class="role" onclick="showForm('admin')">Admin 👤</div>
-        <div class="role" onclick="showForm('student')">Student 🎓</div>
+    <h1>📚 e-Library Management System</h1>
+    
+    <div class="form-box">
+      <h2 class="text-xl font-bold mb-4">Welcome! Please Sign In</h2>
+      
+      <?php if (!empty($error)): ?>
+        <div class="error"><?php echo htmlspecialchars($error); ?></div>
+      <?php endif; ?>
+      
+      <form method="POST" action="">
+        <input type="text" name="username" placeholder="Email or Username" required />
+        <input type="password" name="password" placeholder="Password" required />
+        <button type="submit">Sign In</button>
+      </form>
+      
+      <div class="register-link">
+        Don't have an account? <a href="register.php">Register here</a>
       </div>
-
-      <!-- Admin Login -->
-      <div id="adminForm" class="form-box hidden">
-        <h2 class="text-xl font-bold mb-4">Admin Login</h2>
-        <form onsubmit="return mockLogin(event, 'admin_dashboard.php')">
-          <input type="email" placeholder="Email" required />
-          <input type="password" placeholder="Password" required />
-          <button type="submit">Sign In</button>
-        </form>
-      </div>
-
-      <!-- Student Container -->
-      <div id="studentContainer" class="form-box hidden">
-        <div class="flex justify-center gap-4 mb-4">
-          <button id="studentSignInBtn" class="px-4 py-2 bg-blue-600 text-white rounded">Sign In</button>
-          <button id="studentSignUpBtn" class="px-4 py-2 bg-gray-300 text-black rounded">Sign Up</button>
-        </div>
-
-      <!-- Student Sign In -->
-      <div id="studentSignInSection">
-  <form method="POST" action="student_login.php">
-    <input type="text" name="email" placeholder="Email" required />
-    <input type="password" name="password" placeholder="Password" required />
-    <button type="submit">Sign In</button>
-  </form>
-</div>
-
-
-        <!-- Student Sign Up -->
-        <div id="studentSignUpSection" class="hidden">
-          <form onsubmit="return handleStudentSignup(event)">
-            <input type="text" id="new-username" placeholder="Username" required />
-            <input type="email" id="new-email" placeholder="Email" required />
-            <input type="password" id="new-password" placeholder="Password" required />
-            <input type="password" id="confirm-password" placeholder="Confirm Password" required />
-            <button type="submit">Sign Up</button>
-          </form>
-        </div>
-      </div>
-    <?php else: ?>
-      <div class="role" onclick="window.location='logout.php'">Logout 🚪</div>
-      <div class="role" onclick="window.location='<?php echo ($role === 'admin' ? 'admin_dashboard.php' : 'student_dashboard.php'); ?>'">Go to Dashboard 📊</div>
-    <?php endif; ?>
+    </div>
   </div>
-
-  <script>
-    function showForm(role) {
-      document.getElementById('adminForm').classList.add('hidden');
-      document.getElementById('studentContainer').classList.add('hidden');
-
-      if (role === 'admin') {
-        document.getElementById('adminForm').classList.remove('hidden');
-      } else if (role === 'student') {
-        document.getElementById('studentContainer').classList.remove('hidden');
-        toggleStudentForms(true); // default to Sign In
-      }
-    }
-
-    function toggleStudentForms(showSignIn) {
-      document.getElementById('studentSignInSection').classList.toggle('hidden', !showSignIn);
-      document.getElementById('studentSignUpSection').classList.toggle('hidden', showSignIn);
-
-      document.getElementById('studentSignInBtn').classList.toggle('bg-blue-600', showSignIn);
-      document.getElementById('studentSignInBtn').classList.toggle('bg-gray-300', !showSignIn);
-
-      document.getElementById('studentSignUpBtn').classList.toggle('bg-blue-600', !showSignIn);
-      document.getElementById('studentSignUpBtn').classList.toggle('bg-gray-300', showSignIn);
-    }
-
-    document.getElementById('studentSignInBtn').addEventListener('click', () => toggleStudentForms(true));
-    document.getElementById('studentSignUpBtn').addEventListener('click', () => toggleStudentForms(false));
-
-    function mockLogin(e, redirect) {
-      e.preventDefault();
-      alert("Login successful (mock)");
-      window.location.href = redirect;
-      return false;
-    }
-
-    function handleStudentSignup(e) {
-      e.preventDefault();
-      const username = document.getElementById('new-username').value.trim();
-      const email = document.getElementById('new-email').value.trim();
-      const password = document.getElementById('new-password').value;
-      const confirm = document.getElementById('confirm-password').value;
-
-      if (!username || !email || !password || !confirm) return alert("All fields required");
-      if (password !== confirm) return alert("Passwords do not match");
-
-      localStorage.setItem('student-username', username);
-      localStorage.setItem('student-email', email);
-      localStorage.setItem('student-password', password);
-      alert("Student Sign Up Successful!");
-      toggleStudentForms(true);
-      return false;
-    }
-  </script>
 </body>
 </html>

@@ -38,384 +38,445 @@ $result = $conn->query("SELECT * FROM students ORDER BY student_id DESC");
             font-family: 'Poppins', sans-serif;
             display: flex;
             min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-            background: url('images/library_bg1.jpg') no-repeat center center fixed;
-            background-size: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.7) 0%, rgba(118, 75, 162, 0.7) 25%, rgba(240, 147, 251, 0.6) 50%, rgba(79, 172, 254, 0.6) 75%, rgba(0, 242, 254, 0.7) 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            z-index: 1;
-            pointer-events: none;
-        }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 2;
-            pointer-events: none;
-        }
-        
-        .particle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            animation: float 20s infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0) translateX(0) rotate(0deg);
-                opacity: 0;
-            }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% {
-                transform: translateY(-1000px) translateX(500px) rotate(720deg);
-                opacity: 0;
-            }
-        }
-        
+        /* Sidebar Styles */
         .sidebar {
-            width: 260px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            color: white;
+            width: 280px;
+            background: white;
             height: 100vh;
             position: fixed;
-            padding: 30px 20px;
-            z-index: 100;
-            border-right: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 5px 0 30px rgba(0, 0, 0, 0.2);
-            animation: slideInLeft 0.8s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
         }
         
-        @keyframes slideInLeft {
-            from {
-                transform: translateX(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+        .sidebar-header {
+            padding: 40px 30px 30px;
+            border-bottom: 1px solid #f0f0f0;
         }
         
-        .sidebar h2 {
-            text-align: center;
-            margin-bottom: 40px;
-            font-size: 28px;
+        .sidebar-header h1 {
+            font-size: 42px;
             font-weight: 800;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-            letter-spacing: 2px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            color: #667eea;
+            font-family: cursive;
+            margin-bottom: 8px;
         }
         
-        .sidebar a {
+        .sidebar-header .underline {
+            width: 60px;
+            height: 4px;
+            background: #fbbf24;
+            border-radius: 10px;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 16px 20px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .sidebar-nav a:hover {
+            background: #f8f9ff;
+            color: #667eea;
+        }
+        
+        .sidebar-nav a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+        }
+        
+        .sidebar-nav a.active::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 60%;
+            background: white;
+            border-radius: 10px 0 0 10px;
+        }
+        
+        .sidebar-nav a .icon {
+            font-size: 22px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .admin-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .admin-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        
+        .admin-info p {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 14px;
+        }
+        
+        .sidebar-footer a {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 15px 20px;
-            color: white;
+            padding: 12px 15px;
+            color: #64748b;
             text-decoration: none;
-            transition: all 0.3s;
-            border-radius: 12px;
-            margin-bottom: 10px;
+            border-radius: 10px;
+            font-size: 14px;
             font-weight: 500;
-            font-size: 15px;
-            position: relative;
-            overflow: hidden;
         }
         
-        .sidebar a::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 0;
-            background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), transparent);
-            transition: width 0.4s;
-            border-radius: 12px;
+        .sidebar-footer a:hover {
+            background: #f1f5f9;
+            color: #667eea;
         }
         
-        .sidebar a:hover::before {
-            width: 100%;
-        }
-        
-        .sidebar a:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateX(8px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-        }
-        
+        /* Main Content Area */
         .content {
-            margin-left: 260px;
-            padding: 40px;
+            margin-left: 280px;
             flex: 1;
-            position: relative;
-            z-index: 100;
-            animation: fadeInUp 1s ease;
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        .box {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             padding: 40px;
-            border-radius: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s;
         }
         
-        .box:hover {
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+        .main-container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            min-height: calc(100vh - 80px);
         }
         
-        h2 {
-            color: white;
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .page-title .icon {
+            font-size: 48px;
+        }
+        
+        .page-title h2 {
             font-size: 36px;
-            font-weight: 800;
-            margin-bottom: 30px;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-            letter-spacing: 1px;
-            text-align: center;
+            font-weight: 700;
+            color: #1e293b;
         }
         
         .btn-add {
-            display: inline-block;
-            padding: 16px 40px;
-            background: linear-gradient(135deg, #11998e, #38ef7d);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             color: white;
             border: none;
             border-radius: 50px;
             cursor: pointer;
             font-weight: 700;
             font-size: 16px;
-            transition: all 0.3s;
-            box-shadow: 0 8px 25px rgba(56, 239, 125, 0.4);
             font-family: 'Poppins', sans-serif;
-            letter-spacing: 0.5px;
             text-decoration: none;
-            margin-bottom: 30px;
         }
         
         .btn-add:hover {
-            background: linear-gradient(135deg, #38ef7d, #11998e);
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(56, 239, 125, 0.6);
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        }
+        
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 20px;
+            border: 2px solid #f1f5f9;
         }
         
         table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 12px;
-            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f8fafc;
         }
         
         th {
-            padding: 18px;
+            padding: 20px;
             text-align: left;
-            color: white;
+            color: #64748b;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 14px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-        }
-        
-        th:first-child {
-            border-radius: 12px 0 0 12px;
-        }
-        
-        th:last-child {
-            border-radius: 0 12px 12px 0;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            border-bottom: 2px solid #e2e8f0;
         }
         
         td {
-            padding: 20px 18px;
-            color: white;
+            padding: 20px;
+            color: #1e293b;
             font-weight: 500;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 15px;
         }
         
-        tr {
-            transition: all 0.3s;
+        tbody tr:hover {
+            background: #f8f9ff;
         }
         
-        tbody tr:hover td {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.01);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        tbody tr:last-child td {
+            border-bottom: none;
         }
         
-        tbody tr td:first-child {
-            border-radius: 12px 0 0 12px;
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         
-        tbody tr td:last-child {
-            border-radius: 0 12px 12px 0;
-        }
-        
-        a.btn-edit {
-            display: inline-block;
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             padding: 8px 16px;
-            background: linear-gradient(135deg, #ffc107, #ff9800);
-            color: black;
-            border-radius: 50px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
             font-size: 13px;
-            transition: all 0.3s;
-            margin: 2px;
-            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+            white-space: nowrap;
         }
         
-        a.btn-edit:hover {
-            background: linear-gradient(135deg, #ff9800, #ffc107);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+        .btn-edit-name {
+            background: #fef3c7;
+            color: #92400e;
+            border: 2px solid #fde68a;
         }
         
-        a.btn-delete {
-            display: inline-block;
-            padding: 8px 16px;
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            color: white;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 0.3s;
-            margin: 2px;
-            box-shadow: 0 4px 15px rgba(238, 90, 111, 0.4);
+        .btn-edit-name:hover {
+            background: #fde68a;
         }
         
-        a.btn-delete:hover {
-            background: linear-gradient(135deg, #ee5a6f, #ff6b6b);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(238, 90, 111, 0.6);
+        .btn-edit-email {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 2px solid #bfdbfe;
         }
         
+        .btn-edit-email:hover {
+            background: #bfdbfe;
+        }
+        
+        .btn-edit-username {
+            background: #e0e7ff;
+            color: #3730a3;
+            border: 2px solid #c7d2fe;
+        }
+        
+        .btn-edit-username:hover {
+            background: #c7d2fe;
+        }
+        
+        .btn-delete {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #fecaca;
+        }
+        
+        .btn-delete:hover {
+            background: #fecaca;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+        
+        /* Scrollbar */
         ::-webkit-scrollbar {
-            width: 12px;
+            width: 8px;
+            height: 8px;
         }
         
         ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
+            background: #f1f5f9;
         }
         
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
+            background: #cbd5e1;
             border-radius: 10px;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: #94a3b8;
         }
     </style>
 </head>
 <body>
-    <div class="particles" id="particles"></div>
-
+    <!-- Sidebar -->
     <div class="sidebar">
-        <h2>📚 Admin</h2>
-        <a href="admin_dashboard.php">🏠 Dashboard</a>
-        <a href="books.php">📚 All Books</a>
-        <a href="add_book.php">➕ Add Book</a>
-        <a href="manage_students.php">🎓 Manage Students</a>
-        <a href="logout.php">🚪 Logout</a>
-    </div>
-
-    <div class="content">
-        <div class="box">
-            <h2>🎓 Manage Students</h2>
-
-            <a class="btn-add" href="add_student.php">➕ Add Student</a>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Full Name</th>
-                        <th>Email</th>
-                        <th>Username</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while($row = $result->fetch_assoc()) { ?>
-                    <tr>
-                        <td><?= $row['student_id'] ?></td>
-                        <td><?= htmlspecialchars($row['fullname']) ?></td>
-                        <td><?= htmlspecialchars($row['email']) ?></td>
-                        <td><?= htmlspecialchars($row['username']) ?></td>
-                        <td>
-                            <a class="btn-edit" href="edit_name.php?id=<?= $row['student_id'] ?>">✏️ Edit Name</a>
-                            <a class="btn-edit" href="edit_email.php?id=<?= $row['student_id'] ?>">✉️ Edit Email</a>
-                            <a class="btn-edit" href="edit_username.php?id=<?= $row['student_id'] ?>">👤 Edit Username</a>
-                            <a class="btn-delete" href="manage_students.php?delete=<?= $row['student_id'] ?>" onclick="return confirm('Are you sure you want to delete this student?');">🗑️ Delete</a>
-                        </td>
-                    </tr>
-                    <?php } ?>
-                </tbody>
-            </table>
+        <div class="sidebar-header">
+            <h1>Library</h1>
+            <div class="underline"></div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="admin_dashboard.php">
+                <span class="icon">🏠</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="books.php">
+                <span class="icon">📚</span>
+                <span>All Books</span>
+            </a>
+            <a href="add_book.php">
+                <span class="icon">➕</span>
+                <span>Add Book</span>
+            </a>
+            <a href="#search">
+                <span class="icon">🔍</span>
+                <span>Search Books</span>
+            </a>
+            <a href="manage_students.php" class="active">
+                <span class="icon">🎓</span>
+                <span>Manage Students</span>
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <div class="admin-profile">
+                <div class="admin-avatar">AD</div>
+                <div class="admin-info">
+                    <p>Admin User</p>
+                </div>
+            </div>
+            <a href="admin_logout.php">
+                <span class="icon">🚪</span>
+                <span>Log Out</span>
+            </a>
         </div>
     </div>
 
-    <script>
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            const particleCount = 50;
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 20 + 's';
-                particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
-                particlesContainer.appendChild(particle);
-            }
-        }
-        
-        createParticles();
-    </script>
+    <!-- Main Content -->
+    <div class="content">
+        <div class="main-container">
+            <div class="page-header">
+                <div class="page-title">
+                    <span class="icon">🎓</span>
+                    <h2>Manage Students</h2>
+                </div>
+                <a class="btn-add" href="add_student.php">
+                    <span>➕</span>
+                    <span>Add Student</span>
+                </a>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Username</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while($row = $result->fetch_assoc()) { ?>
+                        <tr>
+                            <td><?= $row['student_id'] ?></td>
+                            <td><?= htmlspecialchars($row['fullname']) ?></td>
+                            <td><?= htmlspecialchars($row['email']) ?></td>
+                            <td><?= htmlspecialchars($row['username']) ?></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a class="btn-action btn-edit-name" href="edit_name.php?id=<?= $row['student_id'] ?>">
+                                        <span>✏️</span>
+                                        <span>Edit Name</span>
+                                    </a>
+                                    <a class="btn-action btn-edit-email" href="edit_email.php?id=<?= $row['student_id'] ?>">
+                                        <span>✉️</span>
+                                        <span>Edit Email</span>
+                                    </a>
+                                    <a class="btn-action btn-edit-username" href="edit_username.php?id=<?= $row['student_id'] ?>">
+                                        <span>👤</span>
+                                        <span>Edit Username</span>
+                                    </a>
+                                    <a class="btn-action btn-delete" href="manage_students.php?delete=<?= $row['student_id'] ?>" onclick="return confirm('Are you sure you want to delete this student?');">
+                                        <span>🗑️</span>
+                                        <span>Delete</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

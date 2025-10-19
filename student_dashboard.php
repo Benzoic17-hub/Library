@@ -1,6 +1,5 @@
 <?php
 session_start();
-include 'db_connection.php';
 
 // Check if student is logged in
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== "student" || !isset($_SESSION['student_id'])) {
@@ -28,7 +27,7 @@ if (isset($_POST['update_profile'])) {
     if ($stmt->execute()) {
         $_SESSION['fullname'] = $fullname;
         $_SESSION['email'] = $email;
-        $message = "<div class='success'>✅ Profile updated successfully!</div>";
+        $message = "<div class='alert alert-success'>✅ Profile updated successfully!</div>";
     }
     $stmt->close();
 }
@@ -50,12 +49,12 @@ if (isset($_POST['change_password'])) {
             $stmt = $conn->prepare("UPDATE students SET password = ? WHERE student_id = ?");
             $stmt->bind_param("si", $hashed, $student_id);
             $stmt->execute();
-            $message = "<div class='success'>✅ Password changed successfully!</div>";
+            $message = "<div class='alert alert-success'>✅ Password changed successfully!</div>";
         } else {
-            $message = "<div class='error'>❌ Passwords don't match or too short (min 6 characters).</div>";
+            $message = "<div class='alert alert-error'>❌ Passwords don't match or too short (min 6 characters).</div>";
         }
     } else {
-        $message = "<div class='error'>❌ Current password is incorrect.</div>";
+        $message = "<div class='alert alert-error'>❌ Current password is incorrect.</div>";
     }
     $stmt->close();
 }
@@ -77,9 +76,9 @@ if (isset($_POST['borrow'])) {
     $duplicate = $stmt->get_result();
     
     if ($duplicate->num_rows > 0) {
-        $message = "<div class='error'>❌ You already borrowed this book.</div>";
+        $message = "<div class='alert alert-error'>❌ You already borrowed this book.</div>";
     } elseif ($activeCount >= 5) {
-        $message = "<div class='error'>❌ Borrow limit reached (5 books max). Return a book first.</div>";
+        $message = "<div class='alert alert-error'>❌ Borrow limit reached (5 books max). Return a book first.</div>";
     } else {
         $stmt = $conn->prepare("SELECT copies_available FROM books WHERE book_id = ?");
         $stmt->bind_param("i", $book_id);
@@ -96,10 +95,10 @@ if (isset($_POST['borrow'])) {
             $stmt->bind_param("i", $book_id);
             $stmt->execute();
             
-            $message = "<div class='success'>✅ Book borrowed successfully! Due in 14 days.</div>";
+            $message = "<div class='alert alert-success'>✅ Book borrowed successfully! Due in 14 days.</div>";
             $activeCount++;
         } else {
-            $message = "<div class='error'>❌ Sorry, this book is not available.</div>";
+            $message = "<div class='alert alert-error'>❌ Sorry, this book is not available.</div>";
         }
         $stmt->close();
     }
@@ -125,889 +124,887 @@ if (isset($_POST['return'])) {
     $stmt->bind_param("i", $borrow_data['book_id']);
     $stmt->execute();
     
-    $message = "<div class='success'>✅ Book returned successfully!" . ($fine > 0 ? " Fine: GH₵$fine" : "") . "</div>";
+    $message = "<div class='alert alert-success'>✅ Book returned successfully!" . ($fine > 0 ? " Fine: GH₵$fine" : "") . "</div>";
     $stmt->close();
 }
 
-// Search books
+// Search and filters
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$category = isset($_GET['category']) ? trim($_GET['category']) : '';
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Student Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f7fa;
+            color: #1a1a1a;
+            display: flex;
             min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-            background: url('images/library_bg2.jpg') no-repeat center center fixed;
-            background-size: cover;
         }
-        
-        body::before {
-            content: '';
+
+        /* Sidebar */
+        .sidebar {
+            width: 240px;
+            background: #fff;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
             position: fixed;
-            top: 0;
+            height: 100vh;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.7) 0%, rgba(118, 75, 162, 0.7) 25%, rgba(240, 147, 251, 0.6) 50%, rgba(79, 172, 254, 0.6) 75%, rgba(0, 242, 254, 0.7) 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            z-index: 1;
-            pointer-events: none;
-        }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        /* Animated Background Particles */
-        .particles {
-            position: fixed;
             top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 2;
-            pointer-events: none;
         }
-        
-        .particle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            animation: float 20s infinite;
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e5e7eb;
         }
-        
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0) translateX(0) rotate(0deg);
-                opacity: 0;
-            }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% {
-                transform: translateY(-1000px) translateX(500px) rotate(720deg);
-                opacity: 0;
-            }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
         }
-        
-        .header {
-            position: relative;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 20px 40px;
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 0;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background: #f9fafb;
+            color: #1a1a1a;
+        }
+
+        .nav-item.active {
+            background: #eff6ff;
+            color: #2563eb;
+            border-left: 3px solid #2563eb;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            animation: slideDown 0.8s ease;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        
-        @keyframes slideDown {
-            from {
-                transform: translateY(-100px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        .header h1 {
-            font-size: 28px;
+
+        .topbar-title {
+            font-size: 24px;
             font-weight: 700;
-            color: white;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-            letter-spacing: 1px;
+            color: #1a1a1a;
         }
-        
-        .user-info {
+
+        .topbar-right {
             display: flex;
             align-items: center;
             gap: 20px;
-            color: white;
-            font-weight: 500;
         }
-        
-        .logout-btn {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            color: white;
-            padding: 12px 28px;
-            text-decoration: none;
-            border-radius: 50px;
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .user-name {
+            font-size: 14px;
             font-weight: 600;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(238, 90, 111, 0.4);
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #1a1a1a;
         }
-        
+
+        .logout-btn {
+            padding: 8px 20px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
         .logout-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(238, 90, 111, 0.6);
-            background: linear-gradient(135deg, #ee5a6f, #ff6b6b);
+            background: #dc2626;
         }
-        
-        .container {
-            position: relative;
-            z-index: 100;
-            max-width: 1400px;
-            margin: 30px auto;
-            padding: 0 20px;
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
         }
-        
-        .stats {
+
+        /* Stats Cards */
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-            animation: fadeInUp 1s ease;
+            gap: 24px;
+            margin-bottom: 32px;
         }
-        
-        @keyframes fadeInUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
+
         .stat-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 30px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            text-align: center;
-            transition: all 0.4s;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: box-shadow 0.2s;
         }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transform: rotate(45deg);
-            transition: all 0.6s;
-        }
-        
-        .stat-card:hover::before {
-            left: 100%;
-        }
-        
+
         .stat-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
-            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
-        
-        .stat-card h3 {
-            color: white;
-            font-size: 48px;
-            font-weight: 800;
-            margin-bottom: 10px;
-            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
-            animation: pulse 2s ease infinite;
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
         }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .stat-card p {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 16px;
+
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
             font-weight: 500;
-            letter-spacing: 1px;
         }
-        
-        .tabs {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            animation: fadeIn 1.2s ease;
+
+        /* Content Card */
+        .content-card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
         }
-        
-        .tab-btn {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            padding: 14px 28px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 16px;
+
+        .card-title {
+            font-size: 18px;
             font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #2563eb;
             color: white;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
-        
-        .tab-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.4);
+
+        .btn-primary:hover {
+            background: #1d4ed8;
         }
-        
-        .tab-btn.active {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
         }
-        
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Books Grid */
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .book-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .book-card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+        }
+
+        .book-cover {
+            width: 100%;
+            height: 240px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 72px;
+            font-weight: 700;
+            color: white;
+            position: relative;
+        }
+
+        .book-actions {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .book-card:hover .book-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: white;
+        }
+
+        .book-info {
+            padding: 16px;
+        }
+
+        .book-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .book-author {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .book-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f9fafb;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        /* Alert */
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
         .tab-content {
             display: none;
-            animation: fadeIn 0.5s ease;
         }
-        
+
         .tab-content.active {
             display: block;
         }
-        
-        .card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 35px;
-            border-radius: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            margin-bottom: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s;
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #9ca3af;
         }
-        
-        .card:hover {
-            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
-            transform: translateY(-5px);
-        }
-        
-        .card h2 {
-            color: white;
-            margin-bottom: 25px;
-            font-size: 28px;
-            font-weight: 700;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-        }
-        
-        .search-box {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        
-        .search-box input {
-            flex: 1;
-            padding: 15px 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50px;
-            font-size: 16px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            color: white;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-        
-        .search-box input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .search-box input:focus {
-            outline: none;
-            border-color: rgba(255, 255, 255, 0.6);
-            background: rgba(255, 255, 255, 0.25);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-        }
-        
-        .search-box button {
-            padding: 15px 35px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 16px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .search-box button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 10px;
-            margin-top: 20px;
-        }
-        
-        th, td {
-            padding: 18px;
-            text-align: left;
-            color: white;
-            font-weight: 500;
-        }
-        
-        th {
-            background: rgba(255, 255, 255, 0.2);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-size: 14px;
-            border-radius: 10px;
-        }
-        
-        tr {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            transition: all 0.3s;
-        }
-        
-        tbody tr {
-            border-radius: 10px;
-        }
-        
-        tbody tr:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.02);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn {
-            padding: 10px 22px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #11998e, #38ef7d);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(56, 239, 125, 0.4);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(238, 90, 111, 0.4);
-        }
-        
-        .btn-info {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-        
-        .btn-info:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-        
-        .overdue {
-            color: #ff6b6b;
-            font-weight: 700;
-            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
-        }
-        
-        .ontime {
-            color: #38ef7d;
-            font-weight: 700;
-            text-shadow: 0 0 10px rgba(56, 239, 125, 0.5);
-        }
-        
-        .success {
-            background: rgba(56, 239, 125, 0.2);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 18px;
-            margin-bottom: 25px;
-            border-left: 5px solid #38ef7d;
-            border-radius: 10px;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(56, 239, 125, 0.2);
-            animation: slideInRight 0.5s ease;
-        }
-        
-        @keyframes slideInRight {
-            from {
-                transform: translateX(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        .error {
-            background: rgba(255, 107, 107, 0.2);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 18px;
-            margin-bottom: 25px;
-            border-left: 5px solid #ff6b6b;
-            border-radius: 10px;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
-            animation: shake 0.5s ease;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            color: white;
-            font-size: 15px;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-        }
-        
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 14px 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            font-size: 15px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            color: white;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-        
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: rgba(255, 255, 255, 0.6);
-            background: rgba(255, 255, 255, 0.25);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-        }
-        
-        .form-group input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 50px;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        }
-        
-        .badge-success {
-            background: linear-gradient(135deg, #11998e, #38ef7d);
-            color: white;
-        }
-        
-        .badge-warning {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            color: white;
-        }
-        
-        .badge-danger {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            color: white;
-        }
-        
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 12px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
         }
     </style>
 </head>
 <body>
-    <!-- Animated Particles Background -->
-    <div class="particles" id="particles"></div>
-
-    <div class="header">
-        <h1>📚 Library Management System</h1>
-        <div class="user-info">
-            <span>Welcome, <strong><?php echo htmlspecialchars($_SESSION['fullname']); ?></strong></span>
-            <a href="logout.php" class="logout-btn">Logout</a>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>📚 e-Library</h2>
         </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item active" onclick="showTab('books')">
+                <span class="nav-icon">📖</span>
+                <span>Browse Books</span>
+            </div>
+            <div class="nav-item" onclick="showTab('borrowed')">
+                <span class="nav-icon">📚</span>
+                <span>My Books</span>
+            </div>
+            <div class="nav-item" onclick="showTab('history')">
+                <span class="nav-icon">📜</span>
+                <span>History</span>
+            </div>
+            <div class="nav-item" onclick="showTab('profile')">
+                <span class="nav-icon">👤</span>
+                <span>Profile</span>
+            </div>
+        </nav>
     </div>
 
-    <div class="container">
-        <?php if ($message) echo $message; ?>
-        
-        <div class="stats">
-            <div class="stat-card">
-                <h3><?php echo $activeCount; ?>/5</h3>
-                <p>Books Borrowed</p>
-            </div>
-            <div class="stat-card">
-                <h3>
-                    <?php
-                    $stmt = $conn->prepare("SELECT SUM(fine) AS total FROM borrow_return WHERE student_id = ? AND status = 'Borrowed'");
-                    $stmt->bind_param("i", $student_id);
-                    $stmt->execute();
-                    $totalFine = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
-                    echo "GH₵" . number_format($totalFine, 2);
-                    $stmt->close();
-                    ?>
-                </h3>
-                <p>Outstanding Fines</p>
-            </div>
-            <div class="stat-card">
-                <h3>
-                    <?php
-                    $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM borrow_return WHERE student_id = ?");
-                    $stmt->bind_param("i", $student_id);
-                    $stmt->execute();
-                    echo $stmt->get_result()->fetch_assoc()['total'];
-                    $stmt->close();
-                    ?>
-                </h3>
-                <p>Total Borrowed</p>
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <h1 class="topbar-title" id="pageTitle">Browse Books</h1>
+            <div class="topbar-right">
+                <div class="user-badge">
+                    <span class="user-name"><?php echo htmlspecialchars($_SESSION['fullname']); ?></span>
+                </div>
+                <a href="logout.php" class="logout-btn">Logout</a>
             </div>
         </div>
 
-        <div class="tabs">
-            <button class="tab-btn active" onclick="showTab('search')">🔍 Search Books</button>
-            <button class="tab-btn" onclick="showTab('borrowed')">📖 Borrowed Books</button>
-            <button class="tab-btn" onclick="showTab('history')">📜 Borrowing History</button>
-            <button class="tab-btn" onclick="showTab('profile')">👤 Profile</button>
-            <button onclick="window.location.href='index.php'" 
-          style="background:#007bff;
-                 color:white;
-                 border:none;
-                 padding:10px 18px;
-                 border-radius:8px;
-                 cursor:pointer;
-                 display:flex;
-                 align-items:center;
-                 gap:6px;
-                 font-size:15px;
-                 box-shadow:0 2px 5px rgba(0,0,0,0.2);">
-    <!-- Back Icon -->
-    <span style="font-size:18px;">🔙</span>
-    <span>Back</span>
-  </button>
-        </div>
+        <!-- Content Area -->
+        <div class="content-area">
+            <?php if ($message) echo $message; ?>
 
-        <!-- Search Books Tab -->
-        <div id="search" class="tab-content active">
-            <div class="card">
-                <h2>Search & Borrow Books</h2>
-                <form method="GET" class="search-box">
-                    <input type="text" name="search" placeholder="Search by title, author, or ISBN..." value="<?php echo htmlspecialchars($search); ?>">
-                    <button type="submit">Search</button>
-                    <?php if ($search): ?>
-                        <a href="student_dashboard.php" class="btn btn-info">Clear</a>
-                    <?php endif; ?>
-                </form>
-                
-                <table>
-                    <tr>
-                        <th>Title</th>
-                        <th>Author</th>
-                        <th>ISBN</th>
-                        <th>Category</th>
-                        <th>Available</th>
-                        <th>Action</th>
-                    </tr>
-                    <?php
-                    if ($search) {
-                        $searchTerm = "%$search%";
-                        $stmt = $conn->prepare("SELECT * FROM books WHERE (title LIKE ? OR author LIKE ? OR isbn LIKE ?) AND copies_available > 0");
-                        $stmt->bind_param("sss", $searchTerm, $searchTerm, $searchTerm);
-                    } else {
-                        $stmt = $conn->prepare("SELECT * FROM books WHERE copies_available > 0 LIMIT 20");
-                    }
-                    $stmt->execute();
-                    $books = $stmt->get_result();
-                    
-                    if ($books->num_rows > 0) {
-                        while ($book = $books->fetch_assoc()) {
-                            echo "<tr>
-                                <td>{$book['title']}</td>
-                                <td>{$book['author']}</td>
-                                <td>{$book['isbn']}</td>
-                                <td>{$book['category']}</td>
-                                <td><span class='badge badge-success'>{$book['copies_available']} available</span></td>
-                                <td>
-                                    <form method='POST' style='display:inline;'>
-                                        <input type='hidden' name='book_id' value='{$book['book_id']}'>
-                                        <button type='submit' name='borrow' class='btn btn-primary'>Borrow</button>
-                                    </form>
-                                    " . ($book['pdf_file'] ? "<a href='read_book.php?book_id={$book['book_id']}' class='btn btn-info' style='margin-left:5px;' target='_blank'>Read</a>" : "") . "
-                                </td>
-                            </tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='6' style='text-align:center;'>No books found</td></tr>";
-                    }
-                    $stmt->close();
-                    ?>
-                </table>
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value"><?php echo $activeCount; ?>/5</div>
+                    <div class="stat-label">Books Borrowed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">
+                        <?php
+                        $stmt = $conn->prepare("SELECT SUM(fine) AS total FROM borrow_return WHERE student_id = ? AND status = 'Borrowed'");
+                        $stmt->bind_param("i", $student_id);
+                        $stmt->execute();
+                        $totalFine = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
+                        echo "₵" . number_format($totalFine, 2);
+                        $stmt->close();
+                        ?>
+                    </div>
+                    <div class="stat-label">Outstanding Fines</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">
+                        <?php
+                        $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM borrow_return WHERE student_id = ?");
+                        $stmt->bind_param("i", $student_id);
+                        $stmt->execute();
+                        echo $stmt->get_result()->fetch_assoc()['total'];
+                        $stmt->close();
+                        ?>
+                    </div>
+                    <div class="stat-label">Total Borrowed</div>
+                </div>
             </div>
-        </div>
 
-        <!-- Borrowed Books Tab -->
-        <div id="borrowed" class="tab-content">
-            <div class="card">
-                <h2>Currently Borrowed Books</h2>
-                <table>
-                    <tr>
-                        <th>Book Title</th>
-                        <th>Borrow Date</th>
-                        <th>Due Date</th>
-                        <th>Days Left</th>
-                        <th>Fine</th>
-                        <th>Action</th>
-                    </tr>
-                    <?php
-                    $stmt = $conn->prepare("SELECT br.id, br.book_id, b.title, br.borrow_date, br.due_date, br.fine 
-                                            FROM borrow_return br
-                                            JOIN books b ON br.book_id = b.book_id
-                                            WHERE br.student_id = ? AND br.status = 'Borrowed'
-                                            ORDER BY br.due_date ASC");
-                    $stmt->bind_param("i", $student_id);
-                    $stmt->execute();
-                    $borrowed = $stmt->get_result();
-                    
-                    if ($borrowed->num_rows > 0) {
-                        while ($row = $borrowed->fetch_assoc()) {
-                            $daysLeft = ceil((strtotime($row['due_date']) - strtotime($today)) / (60 * 60 * 24));
-                            $isOverdue = $daysLeft < 0;
-                            $fine = $isOverdue ? abs($daysLeft) * 1 : 0;
+            <!-- Browse Books Tab -->
+            <div id="books" class="tab-content active">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Library Collection</h2>
+                        <form method="GET" class="filters">
+                            <input type="text" name="search" class="search-input" placeholder="Search by title, author, or ISBN..." value="<?php echo htmlspecialchars($search); ?>">
+                            <select name="category" class="filter-select">
+                                <option value="">All Categories</option>
+                                <?php
+                                $cats = $conn->query("SELECT DISTINCT category FROM books ORDER BY category");
+                                while ($cat = $cats->fetch_assoc()) {
+                                    $selected = ($category == $cat['category']) ? 'selected' : '';
+                                    echo "<option value='{$cat['category']}' $selected>{$cat['category']}</option>";
+                                }
+                                ?>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                            <?php if ($search || $category): ?>
+                                <a href="student_dashboard.php" class="btn btn-secondary" style="text-decoration: none;">Clear</a>
+                            <?php endif; ?>
+                        </form>
+                    </div>
+                    <div class="card-body">
+                        <div class="books-grid">
+                            <?php
+                            $query = "SELECT * FROM books WHERE copies_available > 0";
+                            $params = [];
+                            $types = "";
                             
-                            if ($isOverdue) {
-                                $stmt_update = $conn->prepare("UPDATE borrow_return SET fine = ? WHERE id = ?");
-                                $stmt_update->bind_param("di", $fine, $row['id']);
-                                $stmt_update->execute();
-                                $stmt_update->close();
+                            if ($search && $category) {
+                                $query .= " AND (title LIKE ? OR author LIKE ? OR isbn LIKE ?) AND category = ?";
+                                $searchTerm = "%$search%";
+                                $params = [$searchTerm, $searchTerm, $searchTerm, $category];
+                                $types = "ssss";
+                            } elseif ($search) {
+                                $query .= " AND (title LIKE ? OR author LIKE ? OR isbn LIKE ?)";
+                                $searchTerm = "%$search%";
+                                $params = [$searchTerm, $searchTerm, $searchTerm];
+                                $types = "sss";
+                            } elseif ($category) {
+                                $query .= " AND category = ?";
+                                $params = [$category];
+                                $types = "s";
                             }
                             
-                            $statusClass = $isOverdue ? 'overdue' : 'ontime';
-                            $daysText = $isOverdue ? abs($daysLeft) . " days overdue" : $daysLeft . " days left";
+                            $query .= " LIMIT 50";
                             
-                            echo "<tr>
-                                <td>{$row['title']}</td>
-                                <td>{$row['borrow_date']}</td>
-                                <td>{$row['due_date']}</td>
-                                <td><span class='$statusClass'>$daysText</span></td>
-                                <td><span class='$statusClass'>GH₵" . number_format($fine, 2) . "</span></td>
-                                <td>
-                                    <form method='POST' onsubmit='return confirm(\"Confirm return?\");'>
-                                        <input type='hidden' name='borrow_id' value='{$row['id']}'>
-                                        <button type='submit' name='return' class='btn btn-danger'>Return</button>
-                                    </form>
-                                </td>
-                            </tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='6' style='text-align:center;'>You have no borrowed books</td></tr>";
-                    }
-                    $stmt->close();
-                    ?>
-                </table>
-            </div>
-        </div>
-
-        <!-- Borrowing History Tab -->
-        <div id="history" class="tab-content">
-            <div class="card">
-                <h2>Complete Borrowing History</h2>
-                <table>
-                    <tr>
-                        <th>Book Title</th>
-                        <th>Borrow Date</th>
-                        <th>Due Date</th>
-                        <th>Return Date</th>
-                        <th>Status</th>
-                        <th>Fine</th>
-                    </tr>
-                    <?php
-                    $stmt = $conn->prepare("SELECT b.title, br.borrow_date, br.due_date, br.return_date, br.status, br.fine 
-                                            FROM borrow_return br
-                                            JOIN books b ON br.book_id = b.book_id
-                                            WHERE br.student_id = ?
-                                            ORDER BY br.borrow_date DESC");
-                    $stmt->bind_param("i", $student_id);
-                    $stmt->execute();
-                    $history = $stmt->get_result();
-                    
-                    if ($history->num_rows > 0) {
-                        while ($row = $history->fetch_assoc()) {
-                            $statusBadge = $row['status'] == 'Borrowed' ? 'badge-warning' : 'badge-success';
-                            $returnDate = $row['return_date'] ?? '-';
-                            $fine = $row['fine'] ?? 0;
+                            $stmt = $conn->prepare($query);
+                            if ($params) {
+                                $stmt->bind_param($types, ...$params);
+                            }
+                            $stmt->execute();
+                            $books = $stmt->get_result();
                             
-                            echo "<tr>
-                                <td>{$row['title']}</td>
-                                <td>{$row['borrow_date']}</td>
-                                <td>{$row['due_date']}</td>
-                                <td>$returnDate</td>
-                                <td><span class='badge $statusBadge'>{$row['status']}</span></td>
-                                <td>GH₵" . number_format($fine, 2) . "</td>
-                            </tr>";
-                        }
-                    } else {
-                        echo "<tr><td colspan='6' style='text-align:center;'>No borrowing history</td></tr>";
-                    }
-                    $stmt->close();
-                    ?>
-                </table>
+                            if ($books->num_rows > 0) {
+                                while ($book = $books->fetch_assoc()) {
+                                    $initials = strtoupper(substr($book['title'], 0, 1));
+                                    $hasPdf = !empty($book['pdf_file']);
+                                    echo "<div class='book-card'>
+                                        <div class='book-cover'>
+                                            $initials
+                                            <div class='book-actions'>
+                                                <form method='POST' style='display:inline;'>
+                                                    <input type='hidden' name='book_id' value='{$book['book_id']}'>
+                                                    <button type='submit' name='borrow' class='action-btn' title='Borrow'>📖</button>
+                                                </form>";
+                                    if ($hasPdf) {
+                                        echo "<a href='read_book.php?book_id={$book['book_id']}' class='action-btn' title='Read Book' target='_blank'>👁️</a>";
+                                    }
+                                    echo "</div>
+                                        </div>
+                                        <div class='book-info'>
+                                            <div class='book-title' title='{$book['title']}'>{$book['title']}</div>
+                                            <div class='book-author'>{$book['author']}</div>
+                                            <div class='book-meta'>
+                                                <span class='badge badge-success'>{$book['copies_available']} available</span>";
+                                    if ($hasPdf) {
+                                        echo "<a href='read_book.php?book_id={$book['book_id']}' class='btn btn-primary btn-sm' target='_blank' style='text-decoration:none;'>Read</a>";
+                                    }
+                                    echo "</div>
+                                        </div>
+                                    </div>";
+                                }
+                            } else {
+                                echo "<div class='empty-state' style='grid-column: 1/-1;'>
+                                    <div class='empty-icon'>📚</div>
+                                    <div>No books found matching your criteria</div>
+                                </div>";
+                            }
+                            $stmt->close();
+                            ?>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Profile Tab -->
-        <div id="profile" class="tab-content">
-            <div class="card">
-                <h2>My Profile</h2>
-                <form method="POST">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" name="fullname" value="<?php echo htmlspecialchars($_SESSION['fullname']); ?>" required>
+            <!-- My Books Tab -->
+            <div id="borrowed" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Currently Borrowed Books</h2>
                     </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" value="<?php echo htmlspecialchars($_SESSION['email']); ?>" required>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Book</th>
+                                    <th>Author</th>
+                                    <th>Borrowed</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Fine</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $stmt = $conn->prepare("SELECT br.id, b.title, b.author, br.borrow_date, br.due_date, br.fine 
+                                                        FROM borrow_return br
+                                                        JOIN books b ON br.book_id = b.book_id
+                                                        WHERE br.student_id = ? AND br.status = 'Borrowed'
+                                                        ORDER BY br.due_date ASC");
+                                $stmt->bind_param("i", $student_id);
+                                $stmt->execute();
+                                $borrowed = $stmt->get_result();
+                                
+                                if ($borrowed->num_rows > 0) {
+                                    while ($row = $borrowed->fetch_assoc()) {
+                                        $daysLeft = ceil((strtotime($row['due_date']) - strtotime($today)) / (60 * 60 * 24));
+                                        $isOverdue = $daysLeft < 0;
+                                        $fine = $isOverdue ? abs($daysLeft) * 1 : 0;
+                                        
+                                        if ($isOverdue && $fine != $row['fine']) {
+                                            $stmt_update = $conn->prepare("UPDATE borrow_return SET fine = ? WHERE id = ?");
+                                            $stmt_update->bind_param("di", $fine, $row['id']);
+                                            $stmt_update->execute();
+                                            $stmt_update->close();
+                                        }
+                                        
+                                        $statusBadge = $isOverdue ? 'badge-danger' : 'badge-success';
+                                        $statusText = $isOverdue ? abs($daysLeft) . " days overdue" : $daysLeft . " days left";
+                                        
+                                        echo "<tr>
+                                            <td><strong>{$row['title']}</strong></td>
+                                            <td>{$row['author']}</td>
+                                            <td>{$row['borrow_date']}</td>
+                                            <td>{$row['due_date']}</td>
+                                            <td><span class='badge $statusBadge'>$statusText</span></td>
+                                            <td>₵" . number_format($fine, 2) . "</td>
+                                            <td>
+                                                <form method='POST' onsubmit='return confirm(\"Confirm return?\");' style='display:inline;'>
+                                                    <input type='hidden' name='borrow_id' value='{$row['id']}'>
+                                                    <button type='submit' name='return' class='btn btn-primary btn-sm'>Return</button>
+                                                </form>
+                                            </td>
+                                        </tr>";
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='7' class='empty-state'>
+                                        <div class='empty-icon'>📖</div>
+                                        <div>You have no borrowed books</div>
+                                    </td></tr>";
+                                }
+                                $stmt->close();
+                                ?>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="form-group">
-                        <label>Username</label>
-                        <input type="text" value="<?php echo htmlspecialchars($_SESSION['username']); ?>" disabled>
-                    </div>
-                    <button type="submit" name="update_profile" class="btn btn-primary">Update Profile</button>
-                </form>
+                </div>
             </div>
 
-            <div class="card">
-                <h2>Change Password</h2>
-                <form method="POST">
-                    <div class="form-group">
-                        <label>Current Password</label>
-                        <input type="password" name="current_password" required>
+            <!-- History Tab -->
+            <div id="history" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Borrowing History</h2>
                     </div>
-                    <div class="form-group">
-                        <label>New Password</label>
-                        <input type="password" name="new_password" minlength="6" required>
+                    <div class="card-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Book</th>
+                                    <th>Borrowed</th>
+                                    <th>Due Date</th>
+                                    <th>Returned</th>
+                                    <th>Status</th>
+                                    <th>Fine</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $stmt = $conn->prepare("SELECT b.title, br.borrow_date, br.due_date, br.return_date, br.status, br.fine 
+                                                        FROM borrow_return br
+                                                        JOIN books b ON br.book_id = b.book_id
+                                                        WHERE br.student_id = ?
+                                                        ORDER BY br.borrow_date DESC
+                                                        LIMIT 50");
+                                $stmt->bind_param("i", $student_id);
+                                $stmt->execute();
+                                $history = $stmt->get_result();
+                                
+                                if ($history->num_rows > 0) {
+                                    while ($row = $history->fetch_assoc()) {
+                                        $statusBadge = $row['status'] == 'Borrowed' ? 'badge-warning' : 'badge-success';
+                                        $returnDate = $row['return_date'] ?? '-';
+                                        $fine = $row['fine'] ?? 0;
+                                        
+                                        echo "<tr>
+                                            <td><strong>{$row['title']}</strong></td>
+                                            <td>{$row['borrow_date']}</td>
+                                            <td>{$row['due_date']}</td>
+                                            <td>$returnDate</td>
+                                            <td><span class='badge $statusBadge'>{$row['status']}</span></td>
+                                            <td>₵" . number_format($fine, 2) . "</td>
+                                        </tr>";
+                                    }
+                                } else {
+                                    echo "<tr><td colspan='6' class='empty-state'>
+                                        <div class='empty-icon'>📜</div>
+                                        <div>No borrowing history</div>
+                                    </td></tr>";
+                                }
+                                $stmt->close();
+                                ?>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="form-group">
-                        <label>Confirm New Password</label>
-                        <input type="password" name="confirm_password" minlength="6" required>
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="profile" class="tab-content">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">My Profile</h2>
                     </div>
-                    <button type="submit" name="change_password" class="btn btn-primary">Change Password</button>
-                </form>
+                    <div class="card-body">
+                        <form method="POST">
+                            <div class="form-group">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" name="fullname" class="form-control" value="<?php echo htmlspecialchars($_SESSION['fullname']); ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($_SESSION['email']); ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" value="<?php echo htmlspecialchars($_SESSION['username']); ?>" disabled>
+                            </div>
+                            <button type="submit" name="update_profile" class="btn btn-primary">Update Profile</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="content-card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h2 class="card-title">Change Password</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST">
+                            <div class="form-group">
+                                <label class="form-label">Current Password</label>
+                                <input type="password" name="current_password" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">New Password</label>
+                                <input type="password" name="new_password" class="form-control" minlength="6" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm New Password</label>
+                                <input type="password" name="confirm_password" class="form-control" minlength="6" required>
+                            </div>
+                            <button type="submit" name="change_password" class="btn btn-primary">Change Password</button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <!-- Stylish Back Button -->
-<div style="text-align:left; padding:15px;">
-  
-</div>
 
     <script>
-        // Create animated particles
-        function createParticles() {
-            const particlesContainer = document.getElementById('particles');
-            const particleCount = 50;
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDelay = Math.random() * 20 + 's';
-                particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
-                particlesContainer.appendChild(particle);
-            }
-        }
-        
-        createParticles();
-        
         function showTab(tabName) {
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // Remove active class from all buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
+            // Remove active from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
             });
             
             // Show selected tab
             document.getElementById(tabName).classList.add('active');
             
-            // Add active class to clicked button
-            event.target.classList.add('active');
+            // Add active to clicked nav item
+            event.target.closest('.nav-item').classList.add('active');
+            
+            // Update page title
+            const titles = {
+                'books': 'Browse Books',
+                'borrowed': 'My Books',
+                'history': 'Borrowing History',
+                'profile': 'My Profile'
+            };
+            document.getElementById('pageTitle').textContent = titles[tabName];
         }
     </script>
 </body>
